@@ -1,0 +1,55 @@
+---
+title: "audit_script.rmd"
+author: "KD Mehta"
+date: "2025-12-17"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r}
+# Load libraries
+library(tidyverse)
+library(dplyr)
+library(ggplot2)
+
+# Load data
+df <- read_csv("superstore.csv")
+
+# Quick check of column names
+colnames(df)
+```
+
+```{r}
+# Create the Risk Column
+df_audit <- df %>%
+  mutate(Transaction_Risk = case_when(
+    Discount > 0.2 & Profit < 0 ~ "High Risk: Leakage",
+    TRUE ~ "Normal"
+  ))
+
+# Count how many high risk transactions found
+table(df_audit$Transaction_Risk)
+```
+
+```{r}
+# Visualize the Leakage
+ggplot(data = df_audit, aes(x = Discount, y = Profit, color = Transaction_Risk)) +
+  geom_point(alpha = 0.6) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "black") + # Zero profit line
+  labs(
+    title = "Audit Finding: Discount Abuse Driving Revenue Leakage",
+    subtitle = "Transactions with >20% discount consistently result in negative profit",
+    x = "Discount Applied",
+    y = "Profit ($)"
+  ) +
+  theme_minimal()
+```
